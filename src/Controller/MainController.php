@@ -38,4 +38,22 @@ class MainController extends AbstractController
 
         return new Response('Saved new product with id ' . $project->getId());
     }
+
+    #[Route('/projects/edit/{id}', name: 'edit_project')]
+    public function editProject(EntityManagerInterface $entityManager, int $id): Response
+    {
+        $project = $entityManager->getRepository(Projects::class)->find($id);
+
+        if (!$project) {
+            throw $this->createNotFoundException(
+                'No product found for id ' . $id
+            );
+        }
+        $project->setName('New product name!');
+        $entityManager->flush();
+
+        return $this->redirectToRoute('projects', [
+            'id' => $project->getId()
+        ]);
+    }
 }
