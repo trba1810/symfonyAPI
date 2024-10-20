@@ -57,23 +57,5 @@ class MainController extends AbstractController
         ]);
     }
 
-    #[Route('/projects/delete/{id}', name: 'delete_project')]
-    public function deleteProject(EntityManagerInterface $entityManager, int $id): Response
-    {
-        $project = $entityManager->getRepository(Projects::class)->find($id);
-
-        if (!$project) {
-            throw $this->createNotFoundException(
-                'No product found for id ' . $id
-            );
-        }
-        $entityManager->remove($project);
-        $entityManager->flush();
-
-        return $this->redirectToRoute('projects', [
-            'id' => $project->getId()
-        ]);
-    }
-
 
 }
