@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ProjectsRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ProjectsRepository::class)]
@@ -19,8 +21,15 @@ class Projects
     #[ORM\Column]
     private ?\DateTimeImmutable $startedAt = null;
 
-    #[ORM\Column]
-    private ?int $totalHours = null;
+
+
+    #[ORM\OneToMany(mappedBy: 'project', targetEntity: UserProjectHours::class, orphanRemoval: true)]
+    private Collection $userProjectHours;
+
+    public function __construct()
+    {
+        $this->userProjectHours = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -35,7 +44,6 @@ class Projects
     public function setName(string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -47,19 +55,38 @@ class Projects
     public function setStartedAt(\DateTimeImmutable $startedAt): static
     {
         $this->startedAt = $startedAt;
-
         return $this;
     }
 
-    public function getTotalHours(): ?int
+
+
+
+
+    /**
+     * @return Collection<int, UserProjectHours>
+     */
+    public function getUserProjectHours(): Collection
     {
-        return $this->totalHours;
+        return $this->userProjectHours;
     }
 
-    public function setTotalHours(int $totalHours): static
+    public function addUserProjectHours(UserProjectHours $userProjectHours): static
     {
-        $this->totalHours = $totalHours;
+        if (!$this->userProjectHours->contains($userProjectHours)) {
+            $this->userProjectHours->add($userProjectHours);
+            $userProjectHours->setProject($this);
+        }
+        return $this;
+    }
 
+    public function removeUserProjectHours(UserProjectHours $userProjectHours): static
+    {
+        if ($this->userProjectHours->removeElement($userProjectHours)) {
+            // set the owning side to null (unless already changed)
+            if ($userProjectHours->getProject() === $this) {
+                $userProjectHours->setProject(null);
+            }
+        }
         return $this;
     }
 }

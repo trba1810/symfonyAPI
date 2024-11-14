@@ -6,14 +6,17 @@ use App\Entity\Projects;
 use App\Repository\ProjectsRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use DateTimeImmutable;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 
 class MainController extends AbstractController
 {
-    #[Route('/projects', name: 'projects')]
+    #[Route('/api/projects', name: 'projects')]
     public function projects(ProjectsRepository $projectsRepository): Response
     {
         $projects = $projectsRepository->findAll();
@@ -21,25 +24,32 @@ class MainController extends AbstractController
         return $this->json($projects);
     }
 
-    #[Route('/projects/create', name: 'create_project', methods: ['GET', 'POST'])]
-    public function createProject(EntityManagerInterface $entityManager): Response
+    #[Route('/api/projects/create', name: 'create_project', methods: ['GET', 'POST'])]
+    #[isGranted('ROLE_USER')]
+    public function createProject(Request $request,EntityManagerInterface $entityManager): Response
     {
-        $project = new Projects();
-        $project->setName('Test1');
-        $startedAt = new DateTimeImmutable();
-        $project->setStartedAt($startedAt);
-        $project->setTotalHours(3);
+        try {
+            $data = json_decode($request->getContent(), false);
 
-        // tell Doctrine you want to (eventually) save the Product (no queries yet)
-        $entityManager->persist($project);
+            if (empty($data->name)) {
+                return new JsonResponse(['error' => 'Name is required'], 400);
+            }
 
-        // actually executes the queries (i.e. the INSERT query)
-        $entityManager->flush();
+            $project = new Projects();
+            $project->setName($data->name);
+            $startedAt = new DateTimeImmutable($data->startedAt);
+            $project->setStartedAt($startedAt);
 
-        return new Response('Saved new product with id ' . $project->getId());
+            $entityManager->persist($project);
+            $entityManager->flush();
+
+            return new JsonResponse(['id' => $project->getId()], 201);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 500);
+        }
     }
 
-    #[Route('/projects/edit/{id}', name: 'edit_project')]
+    #[Route('/api/projects/edit/{id}', name: 'edit_project')]
     public function editProject(EntityManagerInterface $entityManager, int $id): Response
     {
         $project = $entityManager->getRepository(Projects::class)->find($id);
