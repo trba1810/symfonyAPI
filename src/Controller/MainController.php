@@ -12,16 +12,28 @@ use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use DateTimeImmutable;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Serializer\SerializerInterface;
+
+
 
 
 class MainController extends AbstractController
 {
+    private SerializerInterface $serializer;
+
+    public function __construct(SerializerInterface $serializer)
+    {
+        $this->serializer = $serializer;
+    }
     #[Route('/api/projects', name: 'projects')]
-    public function projects(ProjectsRepository $projectsRepository): Response
+    public function projects(ProjectsRepository $projectsRepository): JsonResponse
     {
         $projects = $projectsRepository->findAll();
 
-        return $this->json($projects);
+        // Serialize using the defined group
+        $data = $this->serializer->serialize($projects, 'json', ['groups' => ['projects:read']]);
+
+        return new JsonResponse($data, 200, [], true); // Set true for JSON response
     }
 
     #[Route('/api/projects/create', name: 'create_project', methods: ['GET', 'POST'])]

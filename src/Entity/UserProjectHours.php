@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Repository\UserProjectHoursRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 
 #[ORM\Entity(repositoryClass: UserProjectHoursRepository::class)]
 class UserProjectHours
@@ -11,20 +13,25 @@ class UserProjectHours
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['user_project_hours:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'userProjectHours')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['user_project_hours:read'])]
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'userProjectHours')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['user_project_hours:read'])]
     private ?Projects $project = null;
 
     #[ORM\Column]
+    #[Groups(['user_project_hours:read'])]
     private ?int $hoursWorked = null;
 
     #[ORM\Column]
+    #[Groups(['user_project_hours:read'])]
     private ?\DateTimeImmutable $workDate = null;
 
     public function getId(): ?int
