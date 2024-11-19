@@ -61,6 +61,21 @@ class MainController extends AbstractController
         }
     }
 
+    #[Route('/api/project/getproject/{id}', name: 'get_project',methods: ['GET'])]
+    public function getProject(EntityManagerInterface $entityManager,SerializerInterface $serializer,int $id): Response
+    {
+
+        $project = $entityManager->getRepository(Projects::class)->find($id);
+
+        if (!$project) {
+            return new Response('Project not found', Response::HTTP_NOT_FOUND);
+        }
+
+        $jsonContent = $serializer->serialize($project, 'json', ['groups' => ['projects:read']]);
+
+        return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
+    }
+
     #[Route('/api/projects/edit/{id}', name: 'edit_project')]
     public function editProject(EntityManagerInterface $entityManager, int $id): Response
     {
@@ -74,9 +89,7 @@ class MainController extends AbstractController
         $project->setName('New product name!');
         $entityManager->flush();
 
-        return $this->redirectToRoute('projects', [
-            'id' => $project->getId()
-        ]);
+        return $this->json($project, Response::HTTP_OK);
     }
 
     #[Route('/api/projects/delete/{id}', name: 'delete_project')]
